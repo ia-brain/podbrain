@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2025-11-12
+
+### ✨ Added
+
+- **Episode Detail Pages**
+  - Created comprehensive episode detail page at `/episodes/[id]`
+  - Full episode information with title, description, and metadata
+  - YouTube iframe embed for video playback
+  - Guest profiles sidebar with bio and topics
+  - Sponsor placements (banner_top, banner_mid, banner_end)
+  - Premium content section with exclusive feature previews
+  - Subscribe CTA card with gradient background
+  - Responsive 3-column layout (2 main + 1 sidebar)
+  - Back to episodes navigation link
+  - Server-side rendering with async data fetching
+
+### 🔧 Changed
+
+- **Public Episodes Listing**
+  - Added Link import from Next.js
+  - Made episode thumbnails clickable (link to detail page)
+  - Made episode titles clickable with hover effect
+  - Added "View Episode" button as primary action
+  - Changed YouTube link to text-based secondary action
+  - Improved button hierarchy and visual priority
+  - Better user flow from listing to detail pages
+
+### 🐛 Fixed
+
+- **Episode Detail Page 404 Errors**
+  - Removed non-existent `highlights` table query
+  - Fixed placement_type naming convention (banner_top vs top_banner)
+  - Corrected Supabase query interface structure
+  - Fixed guest/sponsor property access (guests vs guest)
+  - Proper TypeScript interfaces for all data structures
+  - Added notFound() error handling
+  - Removed unused asset_url field references
+
+### 🎨 Improvements
+
+- Type-safe interfaces for Guest, Sponsor, Episode
+- Clean helper functions for YouTube ID extraction
+- Optimized Supabase queries with nested selects
+- Server component pattern with proper async/await
+- Improved component organization and readability
+
+---
+
 ## [0.3.0] - 2025-11-12
 
 ### ✨ Added
