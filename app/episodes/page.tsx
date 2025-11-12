@@ -1,0 +1,129 @@
+'use client'
+
+import { supabase } from '@/utils/supabase'
+import { useEffect, useState } from 'react'
+
+export default function EpisodesPage() {
+  const [episodes, setEpisodes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchEpisodes() {
+      const { data, error } = await supabase
+        .from('episodes')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        setError(error.message)
+      } else {
+        setEpisodes(data || [])
+      }
+      setLoading(false)
+    }
+    
+    fetchEpisodes()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">Loading episodes...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-600">
+          Error loading episodes: {error}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            PodBrain Episodes
+          </h1>
+          <p className="text-gray-600">
+            All episodes • {episodes.length} total
+          </p>
+        </div>
+
+        {episodes.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No episodes yet.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {episodes.map((episode) => (
+              <div
+                key={episode.id}
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+              >
+                {episode.youtube_url && (
+                  <div className="aspect-video bg-gray-200">
+                    <img
+                      src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/maxresdefault.jpg`}
+                      alt={episode.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/hqdefault.jpg`
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                    {episode.title}
+                  </h2>
+                  
+                  <p className="text-gray-600 mb-4 line-clamp-3">
+                    {episode.description}
+                  </p>
+
+                  {episode.published_at && (
+                    <p className="text-sm text-gray-500 mb-4">
+                      Published: {new Date(episode.published_at).toLocaleDateString()}
+                    </p>
+                  )}
+
+                  <div className="flex gap-3">
+                    {episode.youtube_url && (
+                      <a
+                        href={episode.youtube_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                      >
+                        Watch on YouTube
+                      </a>
+                    )}
+                    {episode.is_premium && (
+                      <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg font-medium">
+                        Premium
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function extractYouTubeId(url: string): string {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+  const match = url.match(regExp)
+  return match && match[2].length === 11 ? match[2] : ''
+}
