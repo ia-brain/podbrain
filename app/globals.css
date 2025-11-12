@@ -1,26 +1,150 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
+  /* Flow Brand Colors - Vibrant & Energetic */
+  --flow-purple-primary: #8B5CF6;
+  --flow-purple-light: #A855F7;
+  --flow-purple-dark: #7C3AED;
+
+  --flow-pink-primary: #EC4899;
+  --flow-pink-light: #F472B6;
+  --flow-pink-dark: #DB2777;
+
+  --flow-blue-primary: #3B82F6;
+  --flow-blue-light: #60A5FA;
+  --flow-blue-dark: #2563EB;
+
+  --flow-green: #10B981;
+  --flow-yellow: #F59E0B;
+  --flow-red: #EF4444;
+
+  /* Base Colors */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0F172A;
+  --surface: #F8FAFC;
+  --surface-hover: #F1F5F9;
+
+  /* Text Colors */
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
+
+  /* Border Colors */
+  --border-light: #E2E8F0;
+  --border-medium: #CBD5E1;
+  --border-dark: #94A3B8;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+  /* Flow Gradient */
+  --gradient-flow: linear-gradient(135deg, var(--flow-purple-primary), var(--flow-pink-primary));
+  --gradient-flow-alt: linear-gradient(135deg, var(--flow-blue-primary), var(--flow-purple-primary));
 }
 
 @theme inline {
+  /* Colors */
+  --color-flow-purple-primary: var(--flow-purple-primary);
+  --color-flow-purple-light: var(--flow-purple-light);
+  --color-flow-purple-dark: var(--flow-purple-dark);
+
+  --color-flow-pink-primary: var(--flow-pink-primary);
+  --color-flow-pink-light: var(--flow-pink-light);
+  --color-flow-pink-dark: var(--flow-pink-dark);
+
+  --color-flow-blue-primary: var(--flow-blue-primary);
+  --color-flow-blue-light: var(--flow-blue-light);
+  --color-flow-blue-dark: var(--flow-blue-dark);
+
+  --color-flow-green: var(--flow-green);
+  --color-flow-yellow: var(--flow-yellow);
+  --color-flow-red: var(--flow-red);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-border-light: var(--border-light);
+  --color-border-medium: var(--border-medium);
+  --color-border-dark: var(--border-dark);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0F172A;
+    --foreground: #F8FAFC;
+    --surface: #1E293B;
+    --surface-hover: #334155;
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-tertiary: #94A3B8;
+
+    --border-light: #334155;
+    --border-medium: #475569;
+    --border-dark: #64748B;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Flow-inspired custom utilities */
+.gradient-flow {
+  background: var(--gradient-flow);
+}
+
+.gradient-flow-alt {
+  background: var(--gradient-flow-alt);
+}
+
+.text-gradient-flow {
+  background: var(--gradient-flow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Selection */
+::selection {
+  background: var(--flow-purple-light);
+  color: white;
 }

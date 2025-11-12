@@ -1,7 +1,8 @@
 {
-  "name": "podbrain",
-  "version": "0.1.0",
+  "name": "flow-cms",
+  "version": "0.4.0",
   "private": true,
+  "description": "Flow Podcast CMS - Estúdios Flow custom podcast management system",
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
