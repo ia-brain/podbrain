@@ -64,11 +64,21 @@ export default function EpisodesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            PodBrain Episodes
-          </h1>
-          <p className="text-gray-600">
-            All episodes • {episodes.length} total
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                Episódios Flow
+              </h1>
+              <p className="text-purple-600 font-semibold">Estúdios Flow</p>
+            </div>
+          </div>
+          <p className="text-gray-600 text-lg">
+            {episodes.length} episódios disponíveis
           </p>
         </div>
 

@@ -1,526 +1,389 @@
-# 🧠 PodBrain - Podcast CMS & Live Assistant
+# 🎙️ Flow CMS - Sistema de Gerenciamento de Podcast
 
-A comprehensive podcast content management system built with Next.js, Supabase, and AI assistance. Designed for podcast hosts and producers to streamline production, manage guests, track sponsors, and maximize ROI.
+Sistema de gerenciamento completo personalizado para **Estúdios Flow**, o maior podcast do Brasil. Gerencie episódios, convidados e patrocinadores com uma interface moderna e vibrante.
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-purple.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
 
 ---
 
-## 🚀 Features
+## 🚀 Sobre o Flow CMS
 
-### ✅ Completed Features
+Sistema personalizado desenvolvido para **Estúdios Flow** (5.4M+ inscritos no YouTube), oferecendo uma plataforma completa para gerenciar todo o ecossistema do podcast: episódios, convidados, patrocinadores e conteúdo premium.
 
-#### **Episode Management**
-- Create, read, update, and delete episodes
-- YouTube video integration with automatic thumbnail extraction
-- Premium content gating (free vs. subscriber-only)
-- Rich text descriptions
-- Publication date tracking
-- Beautiful grid layout on public pages
+### 🎨 Design Flow
 
-#### **Guest Management**
-- Comprehensive guest profiles (name, bio, contact info)
-- Topics of interest tracking
-- Communication style categorization
-- Guest appearance history
-- Easy-to-use card-based interface
-
-#### **Sponsor Management**
-- Sponsor profiles with contact information
-- Logo URL support with preview
-- Geo-targeting by Brazilian states and regions
-- Website and contact tracking
-- Delete protection with confirmations
-
-#### **Authentication & Security**
-- Google OAuth integration via Supabase
-- Protected admin routes
-- Row-level security (RLS) policies
-- Session management
-- Role-based access (admin, premium, free)
-
-#### **Admin Dashboard**
-- Real-time statistics (episodes, guests, premium content)
-- Quick action shortcuts
-- Beautiful sidebar navigation
-- User profile display
-- Sign out functionality
-
-#### **Public Pages**
-- Episode listing with YouTube thumbnails
-- Responsive grid layout
-- Mobile-friendly design
-- Click-through to YouTube videos
-- Premium badge indicators
+- **Cores da marca**: Gradiente vibrante roxo (#8B5CF6), rosa (#EC4899) e azul (#3B82F6)
+- **Estilo**: Moderno, energético e dinâmico
+- **UX**: Interface intuitiva em português brasileiro
+- **Responsivo**: Funciona perfeitamente em desktop e mobile
 
 ---
 
-## 🛠️ Tech Stack
+## ✅ Funcionalidades Implementadas
+
+### **Gestão de Episódios**
+- Criar, editar e deletar episódios
+- Integração automática com YouTube (thumbnail e embed)
+- Conteúdo premium (exclusivo para assinantes)
+- Descrições ricas e data de publicação
+- Grid responsivo na página pública
+
+### **CRM de Convidados**
+- Perfis completos de convidados
+- Tópicos de interesse
+- Estilo de comunicação
+- Histórico de participações
+- Interface visual com cards
+
+### **Gestão de Patrocinadores**
+- Perfis de patrocinadores com logo
+- Informações de contato
+- Geo-targeting por estados/regiões brasileiras
+- Website e informações comerciais
+- Proteção contra exclusão acidental
+
+### **Autenticação & Segurança**
+- Google OAuth via Supabase
+- Rotas administrativas protegidas
+- Row-level security (RLS)
+- Controle de sessão
+- Níveis de acesso (admin, premium, free)
+
+### **Dashboard Administrativo**
+- Estatísticas em tempo real
+- Cards com gradiente Flow
+- Navegação lateral elegante
+- Ações rápidas
+- Perfil do usuário
+
+### **Páginas Públicas**
+- Página inicial com branding Flow
+- Listagem de episódios
+- Thumbnails do YouTube
+- Design mobile-first
+- Indicadores de conteúdo premium
+
+---
+
+## 🛠️ Stack Tecnológico
 
 ### **Frontend**
-- **Next.js 14** - React framework with App Router
-- **React 18** - UI library
-- **TypeScript** - Type-safe JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
+- **Next.js 14** - Framework React com App Router
+- **React 19.2.0** - Biblioteca UI
+- **TypeScript 5** - JavaScript tipado
+- **Tailwind CSS v4** - Framework CSS utility-first
+- **Inter Font** - Tipografia moderna
 
 ### **Backend**
 - **Next.js API Routes** - Serverless functions
-- **Supabase** - PostgreSQL database
-- **Supabase Auth** - Authentication & user management
-- **Supabase Storage** - File storage (ready for use)
+- **Supabase** - Banco de dados PostgreSQL
+- **Supabase Auth** - Autenticação e gestão de usuários
+- **Supabase Storage** - Armazenamento de arquivos
 
 ### **Deployment**
-- **Vercel** - Hosting platform (recommended)
+- **Vercel** - Hosting (recomendado)
 - **Supabase Cloud** - Database hosting
 
-### **Development Tools**
-- **Cursor** - AI-powered code editor
-- **Claude Code** - AI coding assistant
-- **Git** - Version control
+### **Ferramentas de Desenvolvimento**
+- **Claude Code** - Assistente AI
+- **Git & GitHub** - Controle de versão
 
 ---
 
-## 📁 Project Structure
+## 📁 Estrutura do Projeto
 
 ```
 podbrain/
 ├── app/
-│   ├── (public)/
-│   │   └── episodes/
-│   │       └── page.tsx              # Public episodes listing
+│   ├── page.tsx                           # Landing page Flow
+│   ├── globals.css                        # Flow brand colors & theme
+│   ├── layout.tsx                         # Root layout
+│   ├── login/
+│   │   └── page.tsx                       # Login com Google
+│   ├── episodes/
+│   │   ├── page.tsx                       # Listagem pública
+│   │   └── [id]/
+│   │       └── page.tsx                   # Detalhes do episódio
 │   ├── admin/
-│   │   ├── layout.tsx                # Admin layout with sidebar
-│   │   ├── page.tsx                  # Dashboard
+│   │   ├── layout.tsx                     # Layout admin com sidebar Flow
+│   │   ├── page.tsx                       # Dashboard
 │   │   ├── episodes/
-│   │   │   ├── page.tsx              # Episodes list
-│   │   │   ├── new/
-│   │   │   │   └── page.tsx          # Create episode
-│   │   │   └── [id]/
-│   │   │       └── edit/
-│   │   │           └── page.tsx      # Edit episode
+│   │   │   ├── page.tsx                   # Lista de episódios
+│   │   │   ├── new/page.tsx               # Criar episódio
+│   │   │   └── [id]/edit/page.tsx         # Editar episódio
 │   │   ├── guests/
-│   │   │   ├── page.tsx              # Guests list
-│   │   │   ├── new/
-│   │   │   │   └── page.tsx          # Create guest
-│   │   │   └── [id]/
-│   │   │       └── edit/
-│   │   │           └── page.tsx      # Edit guest
+│   │   │   ├── page.tsx                   # Lista de convidados
+│   │   │   ├── new/page.tsx               # Criar convidado
+│   │   │   └── [id]/edit/page.tsx         # Editar convidado
 │   │   └── sponsors/
-│   │       ├── page.tsx              # Sponsors list
-│   │       ├── new/
-│   │       │   └── page.tsx          # Create sponsor
-│   │       └── [id]/
-│   │           └── edit/
-│   │               └── page.tsx      # Edit sponsor
-│   ├── auth/
-│   │   └── callback/
-│   │       └── route.ts              # OAuth callback handler
-│   └── login/
-│       └── page.tsx                  # Login page
+│   │       ├── page.tsx                   # Lista de patrocinadores
+│   │       ├── new/page.tsx               # Criar patrocinador
+│   │       └── [id]/edit/page.tsx         # Editar patrocinador
+│   └── auth/
+│       └── callback/
+│           └── route.ts                   # OAuth callback
 ├── utils/
-│   └── supabase.ts                   # Supabase client
-├── public/
-│   └── (static assets)
-├── .env.local                        # Environment variables
-├── claude.md                         # Project context for AI
-├── README.md                         # This file
-├── CHANGELOG.md                      # Version history
-└── package.json                      # Dependencies
+│   └── supabase.ts                        # Cliente Supabase
+├── public/                                # Assets estáticos
+├── .env.local                             # Variáveis de ambiente
+├── CLAUDE.md                              # Contexto do projeto
+├── README.md                              # Este arquivo
+└── package.json                           # Dependências
 ```
 
 ---
 
-## 🗄️ Database Schema
+## 🗄️ Banco de Dados
 
-### **Tables**
+### **Tabelas Principais**
 
 #### `users`
-- `id` (UUID, Primary Key)
-- `email` (Text, Unique)
-- `full_name` (Text)
-- `subscription_tier` (Text: 'free' | 'premium')
-- `created_at` (Timestamp)
+- Usuários do sistema (admin e assinantes)
+- Tier de assinatura (free/premium)
 
 #### `episodes`
-- `id` (UUID, Primary Key)
-- `title` (Text, Required)
-- `youtube_url` (Text)
-- `description` (Text)
-- `published_at` (Timestamp)
-- `is_premium` (Boolean, Default: false)
-- `created_at` (Timestamp)
-- `updated_at` (Timestamp)
+- Episódios do podcast
+- YouTube URL, descrição, premium flag
+- Timestamps de publicação
 
 #### `guests`
-- `id` (UUID, Primary Key)
-- `name` (Text, Required)
-- `bio` (Text)
-- `email` (Text)
-- `phone` (Text)
-- `topics_of_interest` (Text Array)
-- `communication_style` (Text)
-- `created_at` (Timestamp)
+- Perfis de convidados
+- CRM completo (bio, contato, tópicos)
+- Estilo de comunicação
 
-#### `episode_guests` (Join Table)
-- `episode_id` (UUID, Foreign Key → episodes)
-- `guest_id` (UUID, Foreign Key → guests)
-- `appearance_number` (Integer)
-- Primary Key: (episode_id, guest_id)
+#### `episode_guests`
+- Relacionamento episódio-convidado
+- Número da aparição
 
 #### `sponsors`
-- `id` (UUID, Primary Key)
-- `name` (Text, Required)
-- `website` (Text)
-- `logo_url` (Text)
-- `contact_email` (Text)
-- `contact_phone` (Text)
-- `geo_targeting` (Text Array)
-- `created_at` (Timestamp)
+- Patrocinadores
+- Logo, website, geo-targeting
 
-#### `episode_sponsors` (Join Table)
-- `id` (UUID, Primary Key)
-- `episode_id` (UUID, Foreign Key → episodes)
-- `sponsor_id` (UUID, Foreign Key → sponsors)
-- `placement_type` (Text)
-- `timestamp_start` (Integer)
-- `timestamp_end` (Integer)
-- `clicks` (Integer, Default: 0)
-- `impressions` (Integer, Default: 0)
-- `created_at` (Timestamp)
+#### `episode_sponsors`
+- Placements de patrocínio
+- Tipos: banner_top, banner_mid, banner_end
+- Analytics: clicks, impressions
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Como Usar
 
-### **Prerequisites**
+### **Pré-requisitos**
+- Node.js 18+
+- Conta Supabase
+- Conta Google Cloud (para OAuth)
 
-- Node.js 18+ installed
-- Git installed
-- Supabase account
-- Google Cloud Console account (for OAuth)
+### **Instalação**
 
-### **Installation**
-
-1. **Clone the repository**
+1. **Clone o repositório**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/ia-brain/podbrain.git
    cd podbrain
    ```
 
-2. **Install dependencies**
+2. **Instale as dependências**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
-   
-   Create a `.env.local` file in the root directory:
+3. **Configure as variáveis de ambiente**
+
+   Crie `.env.local`:
    ```bash
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   
-   # App
+   NEXT_PUBLIC_SUPABASE_URL=sua_url_supabase
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_supabase
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
-4. **Set up Supabase database**
-   
-   - Go to your Supabase project
-   - Navigate to SQL Editor
-   - Run the SQL scripts in the `/sql` folder (or from CHANGELOG.md)
+4. **Configure o banco de dados no Supabase**
+   - Execute os scripts SQL do projeto
+   - Configure as políticas RLS
 
 5. **Configure Google OAuth**
-   
-   - Go to Google Cloud Console
-   - Create OAuth 2.0 credentials
-   - Add redirect URI: `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
-   - Copy Client ID and Secret to Supabase → Authentication → Providers → Google
+   - Crie credenciais no Google Cloud Console
+   - Configure no Supabase → Authentication → Providers
 
-6. **Run development server**
+6. **Execute o servidor de desenvolvimento**
    ```bash
    npm run dev
    ```
 
-7. **Open browser**
-   
-   Navigate to `http://localhost:3000`
+7. **Acesse no navegador**
+   ```
+   http://localhost:3000
+   ```
 
 ---
 
-## 🔐 Authentication
+## 🎨 Personalização Flow
 
-### **Admin Access**
+### **Paleta de Cores**
 
-1. Navigate to `/login`
-2. Click "Sign in with Google"
-3. Authenticate with your Google account
-4. You'll be redirected to the admin dashboard
+As cores Flow estão definidas em `app/globals.css`:
 
-### **Setting Up First Admin**
-
-By default, any authenticated user has admin access. To restrict this:
-
-1. Add a `role` column to the `users` table
-2. Update authentication logic in `app/admin/layout.tsx`
-3. Check user role before granting admin access
-
----
-
-## 📝 Usage Guide
-
-### **Creating an Episode**
-
-1. Log in to admin panel
-2. Navigate to **Episodes** → **New Episode**
-3. Fill in:
-   - Title (required)
-   - YouTube URL
-   - Description
-   - Premium toggle
-4. Click **Create Episode**
-
-### **Managing Guests**
-
-1. Navigate to **Guests** → **New Guest**
-2. Add guest information:
-   - Name, email, phone
-   - Bio
-   - Topics (comma-separated)
-   - Communication style
-3. Click **Add Guest**
-
-### **Managing Sponsors**
-
-1. Navigate to **Sponsors** → **New Sponsor**
-2. Fill in sponsor details:
-   - Name, website, logo URL
-   - Contact information
-   - Select geo-targeting regions
-3. Click **Add Sponsor**
-
----
-
-## 🎨 Customization
-
-### **Changing Colors**
-
-Edit `tailwind.config.js` to customize the color scheme:
-
-```javascript
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#your-color',
-      },
-    },
-  },
+```css
+:root {
+  --flow-purple-primary: #8B5CF6;
+  --flow-pink-primary: #EC4899;
+  --flow-blue-primary: #3B82F6;
+  --gradient-flow: linear-gradient(135deg, var(--flow-purple-primary), var(--flow-pink-primary));
 }
 ```
 
-### **Modifying Navigation**
+### **Utilidades CSS Customizadas**
 
-Edit `app/admin/layout.tsx` to add/remove sidebar items.
-
-### **Adding Fields**
-
-1. Update database schema in Supabase
-2. Modify the corresponding form component
-3. Update TypeScript types
-
----
-
-## 🚀 Deployment
-
-### **Deploy to Vercel (Recommended)**
-
-1. **Push code to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Connect to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Add environment variables
-   - Deploy!
-
-3. **Update OAuth Redirect**
-   - Add production URL to Google OAuth settings
-   - Update Supabase redirect URLs
-
-### **Environment Variables for Production**
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+```css
+.gradient-flow           /* Gradiente roxo → rosa */
+.text-gradient-flow      /* Texto com gradiente */
 ```
 
+### **Modificando o Design**
+
+1. **Cores**: Edite as variáveis CSS em `globals.css`
+2. **Navegação**: Modifique `app/admin/layout.tsx`
+3. **Landing Page**: Personalize `app/page.tsx`
+
 ---
 
-## 🧪 Testing
+## 📝 Guia de Uso
 
-### **Manual Testing Checklist**
+### **Criar Episódio**
+1. Faça login no painel admin
+2. Navegue para **Episódios** → **Novo Episódio**
+3. Preencha título, YouTube URL, descrição
+4. Marque como premium se necessário
+5. Clique em **Criar Episódio**
 
-- [ ] Can log in with Google
-- [ ] Can create/edit/delete episodes
-- [ ] Can create/edit/delete guests
-- [ ] Can create/edit/delete sponsors
-- [ ] YouTube thumbnails load correctly
-- [ ] Public episodes page works
-- [ ] Mobile responsive on all pages
-- [ ] Sign out works correctly
+### **Gerenciar Convidados**
+1. Vá para **Convidados** → **Novo Convidado**
+2. Adicione informações básicas e CRM
+3. Defina tópicos de interesse
+4. Escolha estilo de comunicação
+5. Salve o perfil
 
-### **Testing on Mobile**
+### **Gerenciar Patrocinadores**
+1. Acesse **Patrocinadores** → **Novo Patrocinador**
+2. Preencha dados comerciais
+3. Adicione logo URL
+4. Selecione geo-targeting
+5. Salve as informações
 
-1. Run `npm run dev`
-2. Find your local IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
-3. On your phone, navigate to `http://YOUR_IP:3000`
+---
+
+## 🚀 Deploy
+
+### **Deploy no Vercel (Recomendado)**
+
+1. **Push para GitHub**
+   ```bash
+   git push origin master
+   ```
+
+2. **Conecte ao Vercel**
+   - Vá para [vercel.com](https://vercel.com)
+   - Importe o repositório
+   - Adicione as variáveis de ambiente
+   - Deploy!
+
+3. **Configure OAuth para produção**
+   - Adicione URL de produção no Google OAuth
+   - Atualize redirect URLs no Supabase
 
 ---
 
 ## 🐛 Troubleshooting
 
-### **"Cannot read property of undefined" errors**
+### **Erro de autenticação**
+- Verifique credenciais Google OAuth
+- Confirme redirect URI no Supabase
+- Certifique-se que cookies estão habilitados
 
-- Check that all database tables are created
-- Verify environment variables are set correctly
-- Ensure Supabase URL and keys are correct
+### **Thumbnails do YouTube não carregam**
+- Valide formato da URL do YouTube
+- Teste URL diretamente no navegador
+- Verifique ID do vídeo extraído
 
-### **Authentication not working**
-
-- Verify Google OAuth credentials
-- Check redirect URI matches exactly
-- Ensure cookies are enabled in browser
-
-### **Images not loading**
-
-- Check YouTube URLs are valid
-- Verify CORS settings if using custom images
-- Test URLs in browser directly
-
-### **Database errors**
-
-- Check Row Level Security (RLS) policies
-- Verify foreign key relationships
-- Test queries in Supabase SQL Editor
-
----
-
-## 📚 Resources
-
-### **Documentation**
-- [Next.js Docs](https://nextjs.org/docs)
-- [Supabase Docs](https://supabase.com/docs)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [TypeScript Docs](https://www.typescriptlang.org/docs)
-
-### **Learning**
-- [Next.js Learn Course](https://nextjs.org/learn)
-- [Supabase Tutorials](https://supabase.com/docs/guides/getting-started/tutorials)
-
-### **Community**
-- [Next.js Discord](https://nextjs.org/discord)
-- [Supabase Discord](https://discord.supabase.com)
+### **Erros de banco de dados**
+- Confirme políticas RLS no Supabase
+- Verifique foreign keys
+- Teste queries no SQL Editor
 
 ---
 
 ## 🗺️ Roadmap
 
-### **Phase 2: Advanced Features** (Planned)
+### **Próximas Funcionalidades**
+- [ ] Vincular convidados aos episódios (interface admin)
+- [ ] Vincular patrocinadores com timestamps
+- [ ] Analytics de performance de patrocínios
+- [ ] Integração com YouTube Analytics
+- [ ] Sistema de assinatura (Stripe)
+- [ ] Conteúdo exclusivo premium
+- [ ] Geração de clipes com IA
+- [ ] RSS feed automático
 
-- [ ] Link guests to episodes (episode-guest relationships)
-- [ ] Link sponsors to episodes (sponsor placements)
-- [ ] AI content generation (episode intros, summaries)
-- [ ] YouTube Analytics integration
-- [ ] Spotify integration
-- [ ] Advanced guest CRM fields
-- [ ] Sponsor performance analytics
-- [ ] Geolocation-based ad serving
-
-### **Phase 3: Monetization** (Future)
-
-- [ ] Stripe payment integration
-- [ ] Subscription tiers (Free/Premium)
-- [ ] Premium content access control
-- [ ] User favorites and collections
-- [ ] Download functionality
-- [ ] Personal notes on episodes
-
-### **Phase 4: Growth** (Future)
-
-- [ ] SEO optimization
-- [ ] Social sharing
-- [ ] Email capture
-- [ ] Episode search and filtering
-- [ ] RSS feed generation
-- [ ] Clip player with highlights
+### **Futuro**
+- [ ] Integração Spotify
+- [ ] Transcrição automática
+- [ ] SEO avançado
+- [ ] Compartilhamento social
+- [ ] Sistema de comentários
+- [ ] App mobile
 
 ---
 
-## 🤝 Contributing
+## 📚 Recursos
 
-This is a personal project, but if you want to contribute:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [Next.js Docs](https://nextjs.org/docs)
+- [Supabase Docs](https://supabase.com/docs)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [TypeScript Docs](https://www.typescriptlang.org/docs)
 
 ---
 
-## 📄 License
+## 📊 Estatísticas do Projeto
 
-This project is private and proprietary. All rights reserved.
-
----
-
-## 👤 Author
-
-**Your Name**
-- Built with AI assistance (Cursor + Claude Code)
-- Started: November 2025
+- **Linhas de código**: ~2,500+
+- **Tempo de desenvolvimento**: 2 dias
+- **Tecnologias**: 8+
+- **Tabelas no banco**: 6
+- **Páginas admin**: 10+
+- **Sistemas CRUD**: 3
 
 ---
 
-## 🙏 Acknowledgments
+## 👤 Desenvolvedor
 
-- Built with guidance from Claude (Anthropic)
-- Developed using Cursor IDE
-- UI inspired by modern SaaS designs
-- Brazilian regions list for geo-targeting
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check the Troubleshooting section above
-2. Review the CHANGELOG.md for recent changes
-3. Consult the documentation links
-4. Ask Claude Code for help!
+**Desenvolvido com assistência de IA**
+- Built with Claude Code
+- Customizado para Estúdios Flow
+- Novembro 2025
 
 ---
 
-## 🎉 Quick Stats
+## 🙏 Reconhecimentos
 
-- **Lines of Code**: ~2,000+
-- **Development Time**: 1 day
-- **Technologies Used**: 8+
-- **Database Tables**: 6
-- **Admin Pages**: 10+
-- **CRUD Systems**: 3 (Episodes, Guests, Sponsors)
+- Design inspirado pela identidade visual do Flow Podcast
+- Desenvolvido com Claude (Anthropic)
+- Assistência via Claude Code
+- Interface moderna e brasileira
 
 ---
 
-**Built with ❤️ and AI assistance**
+## 💜 Flow Podcast
 
-Last Updated: November 2025
+Sistema personalizado para o **maior podcast do Brasil**
+
+- 🎙️ **5.4M+ inscritos** no YouTube
+- 🇧🇷 **Conteúdo brasileiro** autêntico
+- 🔥 **Episódios semanais** com grandes nomes
+- 💼 **Patrocinadores nacionais** e internacionais
+
+---
+
+**Feito com ❤️ para o Flow Podcast**
+
+*Última atualização: Novembro 2025*
