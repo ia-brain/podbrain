@@ -1,24 +1,50 @@
 'use client'
 
 import { supabase } from '@/utils/supabase'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import ViewSwitcher from '@/components/ViewSwitcher'
+import AnimatedBackground from '@/components/AnimatedBackground'
+import SearchBar from '@/components/SearchBar'
+import FilterPanel, { FilterSection, FilterOption } from '@/components/FilterPanel'
+import FilterChip from '@/components/FilterChip'
 
-type ViewMode = 'list' | 'grid' | 'hero'
+type Episode = {
+  id: string
+  title: string
+  description: string | null
+  youtube_url: string | null
+  published_at: string | null
+  is_premium: boolean
+  created_at: string
+  episode_guests?: Array<{
+    guests: { id: string; name: string } | null
+  }>
+  episode_sponsors?: Array<{
+    sponsors: { id: string; name: string } | null
+  }>
+}
 
 export default function AdminEpisodesPage() {
-  const [episodes, setEpisodes] = useState<any[]>([])
+  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [allGuests, setAllGuests] = useState<Array<{ id: string; name: string }>>([])
+  const [allSponsors, setAllSponsors] = useState<Array<{ id: string; name: string }>>([])
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [selectedGuests, setSelectedGuests] = useState<string[]>([])
+  const [selectedSponsors, setSelectedSponsors] = useState<string[]>([])
+  const [showPremiumOnly, setShowPremiumOnly] = useState(false)
+  const [showFreeOnly, setShowFreeOnly] = useState(false)
 
   useEffect(() => {
-    fetchEpisodes()
+    fetchData()
   }, [])
 
-  async function fetchEpisodes() {
-    // Fetch episodes with their guests and sponsors
-    const { data: episodesData, error } = await supabase
+  async function fetchData() {
+    // Fetch episodes
+    const { data: episodesData, error: episodesError } = await supabase
       .from('episodes')
       .select(`
         *,
@@ -32,414 +58,372 @@ export default function AdminEpisodesPage() {
           sponsors (
             id,
             name
-          ),
-          placement_type
+          )
         )
       `)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching episodes:', error)
+    // Fetch all guests for filter
+    const { data: guestsData } = await supabase
+      .from('guests')
+      .select('id, name')
+      .order('name')
+
+    // Fetch all sponsors for filter
+    const { data: sponsorsData } = await supabase
+      .from('sponsors')
+      .select('id, name')
+      .order('name')
+
+    if (episodesError) {
+      console.error('Error fetching episodes:', episodesError)
     } else {
       setEpisodes(episodesData || [])
     }
+
+    setAllGuests(guestsData || [])
+    setAllSponsors(sponsorsData || [])
     setLoading(false)
   }
 
-  async function deleteEpisode(id: string, title: string) {
-    if (!confirm(`Tem certeza que deseja deletar "${title}"?`)) {
-      return
-    }
+  // Filtered Episodes
+  const filteredEpisodes = useMemo(() => {
+    return episodes.filter(episode => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesTitle = episode.title.toLowerCase().includes(query)
+        const matchesDescription = episode.description?.toLowerCase().includes(query)
+        const guests = episode.episode_guests?.map(eg => eg.guests?.name.toLowerCase()).filter(Boolean) || []
+        const matchesGuests = guests.some(name => name?.includes(query))
+        const sponsors = episode.episode_sponsors?.map(es => es.sponsors?.name.toLowerCase()).filter(Boolean) || []
+        const matchesSponsors = sponsors.some(name => name?.includes(query))
 
-    const { error } = await supabase
-      .from('episodes')
-      .delete()
-      .eq('id', id)
+        if (!matchesTitle && !matchesDescription && !matchesGuests && !matchesSponsors) {
+          return false
+        }
+      }
+
+      // Guest filter
+      if (selectedGuests.length > 0) {
+        const episodeGuestIds = episode.episode_guests?.map(eg => eg.guests?.id).filter(Boolean) || []
+        const hasSelectedGuest = selectedGuests.some(guestId => episodeGuestIds.includes(guestId))
+        if (!hasSelectedGuest) return false
+      }
+
+      // Sponsor filter
+      if (selectedSponsors.length > 0) {
+        const episodeSponsorIds = episode.episode_sponsors?.map(es => es.sponsors?.id).filter(Boolean) || []
+        const hasSelectedSponsor = selectedSponsors.some(sponsorId => episodeSponsorIds.includes(sponsorId))
+        if (!hasSelectedSponsor) return false
+      }
+
+      // Premium filter
+      if (showPremiumOnly && !episode.is_premium) return false
+      if (showFreeOnly && episode.is_premium) return false
+
+      return true
+    })
+  }, [episodes, searchQuery, selectedGuests, selectedSponsors, showPremiumOnly, showFreeOnly])
+
+  const activeFilterCount = selectedGuests.length + selectedSponsors.length +
+    (showPremiumOnly ? 1 : 0) + (showFreeOnly ? 1 : 0)
+
+  async function deleteEpisode(id: string, title: string) {
+    if (!confirm(`Tem certeza que deseja deletar "${title}"?`)) return
+
+    const { error } = await supabase.from('episodes').delete().eq('id', id)
 
     if (error) {
       alert('Erro ao deletar episódio: ' + error.message)
     } else {
-      alert('Episódio deletado com sucesso!')
-      fetchEpisodes()
+      setEpisodes(episodes.filter(ep => ep.id !== id))
     }
-  }
-
-  function getRandomGradient() {
-    const gradients = [
-      'from-purple-600 via-pink-600 to-blue-600',
-      'from-blue-600 via-purple-600 to-pink-600',
-      'from-pink-600 via-purple-600 to-blue-600',
-      'from-purple-500 via-pink-500 to-orange-500',
-      'from-blue-500 via-purple-500 to-pink-500',
-    ]
-    return gradients[Math.floor(Math.random() * gradients.length)]
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-600 font-medium">Carregando episódios...</p>
+      <div className="flex items-center justify-center h-screen relative">
+        <AnimatedBackground />
+        <div className="text-center relative z-10">
+          <div className="inline-block w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin glow-cyan"></div>
+          <p className="mt-6 text-cyan-400 font-orbitron font-bold text-xl">LOADING EPISODES</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Episódios</h1>
-          <p className="text-gray-600 mt-1">{episodes.length} episódios totais</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <ViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
-          <Link
-            href="/admin/episodes/new"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-medium"
-          >
-            + Novo Episódio
-          </Link>
-        </div>
-      </div>
+    <div className="relative min-h-screen -m-8 p-8">
+      <AnimatedBackground />
+      <div className="fixed inset-0 grid-overlay opacity-20 pointer-events-none"></div>
 
-      {episodes.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <div className="text-6xl mb-4">🎙️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Nenhum episódio ainda</h2>
-          <p className="text-gray-600 mb-6">Comece criando seu primeiro episódio</p>
-          <Link
-            href="/admin/episodes/new"
-            className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition"
-          >
-            Criar Primeiro Episódio
-          </Link>
-        </div>
-      ) : (
-        <>
-          {/* LIST VIEW */}
-          {viewMode === 'list' && (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-purple-50 to-pink-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Título
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Convidados
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Patrocinadores
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Publicado
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {episodes.map((episode) => {
-                    const guests = episode.episode_guests?.map((eg: any) => eg.guests).filter(Boolean) || []
-                    const sponsors = episode.episode_sponsors?.map((es: any) => es.sponsors).filter(Boolean) || []
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-1 h-12 bg-gradient-to-b from-cyan-400 to-magenta-500 glow-cyan"></div>
+              <div>
+                <h1 className="text-4xl font-orbitron font-bold text-gradient-neon">EPISÓDIOS</h1>
+                <p className="text-gray-400 mt-1">
+                  <span className="text-cyan-400 font-orbitron font-bold">{filteredEpisodes.length}</span> resultados
+                  {searchQuery && <span className="text-gray-500"> para "{searchQuery}"</span>}
+                </p>
+              </div>
+            </div>
 
-                    return (
-                      <tr key={episode.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {episode.title}
-                              </div>
-                              {episode.description && (
-                                <div className="text-sm text-gray-500 truncate max-w-md">
-                                  {episode.description.substring(0, 80)}...
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          {guests.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {guests.map((guest: any) => (
-                                <span
-                                  key={guest.id}
-                                  className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded font-medium"
-                                >
-                                  {guest.name}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-400">Sem convidados</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          {sponsors.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {sponsors.map((sponsor: any) => (
-                                <span
-                                  key={sponsor.id}
-                                  className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium"
-                                >
-                                  💼 {sponsor.name}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-400">Sem patrocinadores</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {episode.published_at
-                              ? new Date(episode.published_at).toLocaleDateString('pt-BR')
-                              : '-'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {episode.is_premium ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                              Premium
-                            </span>
-                          ) : (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Grátis
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            href={`/admin/episodes/${episode.id}/edit`}
-                            className="text-purple-600 hover:text-purple-900 mr-4 font-medium"
-                          >
-                            Editar
-                          </Link>
-                          <button
-                            onClick={() => deleteEpisode(episode.id, episode.title)}
-                            className="text-red-600 hover:text-red-900 font-medium"
-                          >
-                            Deletar
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`px-6 py-3 rounded-xl font-orbitron font-bold transition-all flex items-center gap-2 relative ${
+                  isFilterOpen || activeFilterCount > 0
+                    ? 'neon-border bg-cyan-500/10 text-cyan-400'
+                    : 'border border-cyan-400/30 text-gray-400 hover:border-cyan-400 hover:text-cyan-400'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                FILTROS
+                {activeFilterCount > 0 && (
+                  <span className="px-2 py-0.5 bg-cyan-400 text-black rounded-full text-xs font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <Link
+                href="/admin/episodes/new"
+                className="px-6 py-3 bg-gradient-neon text-black rounded-xl font-orbitron font-bold hover:shadow-[0_0_30px_rgba(0,255,255,0.5)] transition-all"
+              >
+                + NOVO
+              </Link>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <SearchBar
+            placeholder="Buscar por título, descrição, convidado ou patrocinador..."
+            onSearch={setSearchQuery}
+            className="mb-6"
+          />
+
+          {/* Active Filters */}
+          {activeFilterCount > 0 && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm text-gray-400 font-medium">Filtros ativos:</span>
+              {selectedGuests.map(guestId => {
+                const guest = allGuests.find(g => g.id === guestId)
+                return guest ? (
+                  <FilterChip
+                    key={guestId}
+                    label={`👤 ${guest.name}`}
+                    onRemove={() => setSelectedGuests(selectedGuests.filter(id => id !== guestId))}
+                    color="purple"
+                  />
+                ) : null
+              })}
+              {selectedSponsors.map(sponsorId => {
+                const sponsor = allSponsors.find(s => s.id === sponsorId)
+                return sponsor ? (
+                  <FilterChip
+                    key={sponsorId}
+                    label={`💼 ${sponsor.name}`}
+                    onRemove={() => setSelectedSponsors(selectedSponsors.filter(id => id !== sponsorId))}
+                    color="green"
+                  />
+                ) : null
+              })}
+              {showPremiumOnly && (
+                <FilterChip
+                  label="⭐ Premium"
+                  onRemove={() => setShowPremiumOnly(false)}
+                  color="cyan"
+                />
+              )}
+              {showFreeOnly && (
+                <FilterChip
+                  label="🆓 Grátis"
+                  onRemove={() => setShowFreeOnly(false)}
+                  color="cyan"
+                />
+              )}
+              <button
+                onClick={() => {
+                  setSelectedGuests([])
+                  setSelectedSponsors([])
+                  setShowPremiumOnly(false)
+                  setShowFreeOnly(false)
+                }}
+                className="text-sm text-gray-400 hover:text-cyan-400 transition-colors underline"
+              >
+                Limpar tudo
+              </button>
             </div>
           )}
+        </div>
 
-          {/* GRID VIEW */}
-          {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {episodes.map((episode) => {
-                const guests = episode.episode_guests?.map((eg: any) => eg.guests).filter(Boolean) || []
-                const sponsors = episode.episode_sponsors?.map((es: any) => es.sponsors).filter(Boolean) || []
+        {/* Episodes Grid */}
+        {filteredEpisodes.length === 0 ? (
+          <div className="holographic-card rounded-2xl p-16 text-center">
+            <div className="text-6xl mb-6">🔍</div>
+            <h3 className="text-2xl font-orbitron font-bold text-white mb-3">Nenhum resultado encontrado</h3>
+            <p className="text-gray-400 mb-6">Tente ajustar seus filtros ou termo de busca</p>
+            {(searchQuery || activeFilterCount > 0) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedGuests([])
+                  setSelectedSponsors([])
+                  setShowPremiumOnly(false)
+                  setShowFreeOnly(false)
+                }}
+                className="px-6 py-3 neon-border rounded-xl text-cyan-400 font-orbitron font-bold hover:bg-cyan-500/10 transition-all"
+              >
+                LIMPAR FILTROS
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredEpisodes.map((episode) => {
+              const guests = episode.episode_guests?.map(eg => eg.guests).filter(Boolean) || []
+              const sponsors = episode.episode_sponsors?.map(es => es.sponsors).filter(Boolean) || []
 
-                return (
-                  <div
-                    key={episode.id}
-                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border border-gray-100"
-                  >
-                    {episode.youtube_url && (
-                      <Link href={`/admin/episodes/${episode.id}/edit`}>
-                        <div className="aspect-video bg-gradient-to-br from-purple-100 to-pink-100 cursor-pointer hover:opacity-90 transition">
-                          <img
-                            src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/maxresdefault.jpg`}
-                            alt={episode.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </Link>
+              return (
+                <div
+                  key={episode.id}
+                  className="holographic-card rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all"
+                >
+                  {/* Thumbnail */}
+                  {episode.youtube_url && (
+                    <Link href={`/admin/episodes/${episode.id}/edit`}>
+                      <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 relative overflow-hidden cursor-pointer">
+                        <img
+                          src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/maxresdefault.jpg`}
+                          alt={episode.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        {episode.is_premium && (
+                          <div className="absolute top-4 right-4 px-3 py-1 bg-yellow-500 text-black rounded-full text-xs font-bold">
+                            ⭐ PREMIUM
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  )}
+
+                  <div className="p-6">
+                    <Link href={`/admin/episodes/${episode.id}/edit`}>
+                      <h3 className="text-xl font-bold text-white mb-3 hover:text-cyan-400 transition-colors cursor-pointer line-clamp-2 group-hover:text-cyan-400">
+                        {episode.title}
+                      </h3>
+                    </Link>
+
+                    {episode.description && (
+                      <p className="text-sm text-gray-400 mb-4 line-clamp-2">{episode.description}</p>
                     )}
 
-                    <div className="p-5">
-                      <Link href={`/admin/episodes/${episode.id}/edit`}>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 hover:text-purple-600 transition cursor-pointer line-clamp-2">
-                          {episode.title}
-                        </h3>
+                    {/* Guests */}
+                    {guests.length > 0 && (
+                      <div className="mb-3">
+                        <div className="flex flex-wrap gap-2">
+                          {guests.map((guest: any) => (
+                            <span key={guest.id} className="px-2 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-400 text-xs rounded font-medium">
+                              👤 {guest.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sponsors */}
+                    {sponsors.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex flex-wrap gap-2">
+                          {sponsors.map((sponsor: any) => (
+                            <span key={sponsor.id} className="px-2 py-1 bg-green-500/20 border border-green-400/30 text-green-400 text-xs rounded font-medium">
+                              💼 {sponsor.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-cyan-400/20">
+                      <Link
+                        href={`/admin/episodes/${episode.id}/edit`}
+                        className="flex-1 text-center py-2 neon-border rounded-lg text-cyan-400 hover:bg-cyan-500/10 transition-all text-sm font-orbitron font-bold"
+                      >
+                        EDITAR
                       </Link>
-
-                      {guests.length > 0 && (
-                        <div className="mb-3">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Convidados:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {guests.map((guest: any) => (
-                              <span
-                                key={guest.id}
-                                className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded font-medium"
-                              >
-                                👤 {guest.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {sponsors.length > 0 && (
-                        <div className="mb-3">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Patrocinadores:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {sponsors.map((sponsor: any) => (
-                              <span
-                                key={sponsor.id}
-                                className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium"
-                              >
-                                💼 {sponsor.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-3 border-t">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                          episode.is_premium
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {episode.is_premium ? '⭐ Premium' : '🆓 Grátis'}
-                        </span>
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/admin/episodes/${episode.id}/edit`}
-                            className="text-xs px-3 py-1 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition font-medium"
-                          >
-                            Editar
-                          </Link>
-                          <button
-                            onClick={() => deleteEpisode(episode.id, episode.title)}
-                            className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 transition font-medium"
-                          >
-                            Deletar
-                          </button>
-                        </div>
-                      </div>
+                      <button
+                        onClick={() => deleteEpisode(episode.id, episode.title)}
+                        className="flex-1 py-2 border border-red-400/40 rounded-lg text-red-400 hover:bg-red-500/10 transition-all text-sm font-orbitron font-bold"
+                      >
+                        DELETAR
+                      </button>
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
-          {/* HERO VIEW */}
-          {viewMode === 'hero' && (
-            <div className="space-y-4">
-              {episodes.map((episode, index) => {
-                const guests = episode.episode_guests?.map((eg: any) => eg.guests).filter(Boolean) || []
-                const sponsors = episode.episode_sponsors?.map((es: any) => es.sponsors).filter(Boolean) || []
-                const randomViews = Math.floor(Math.random() * 500000) + 50000 // Mock views data
+      {/* Filter Panel */}
+      <FilterPanel isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} title="FILTROS">
+        <FilterSection title="Status">
+          <FilterOption
+            label="Premium"
+            checked={showPremiumOnly}
+            onChange={setShowPremiumOnly}
+          />
+          <FilterOption
+            label="Grátis"
+            checked={showFreeOnly}
+            onChange={setShowFreeOnly}
+          />
+        </FilterSection>
 
-                return (
-                  <div
-                    key={episode.id}
-                    className="relative h-48 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group"
-                  >
-                    {/* Background Gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-r ${getRandomGradient()}`}></div>
+        <FilterSection title="Convidados">
+          {allGuests.map(guest => (
+            <FilterOption
+              key={guest.id}
+              label={guest.name}
+              checked={selectedGuests.includes(guest.id)}
+              onChange={(checked) => {
+                if (checked) {
+                  setSelectedGuests([...selectedGuests, guest.id])
+                } else {
+                  setSelectedGuests(selectedGuests.filter(id => id !== guest.id))
+                }
+              }}
+            />
+          ))}
+        </FilterSection>
 
-                    {/* Dark Overlay */}
-                    <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition"></div>
-
-                    {/* Content */}
-                    <div className="relative h-full flex items-center px-8">
-                      {/* Profile Image */}
-                      <div className="flex-shrink-0 mr-6">
-                        <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center overflow-hidden shadow-xl">
-                          {episode.youtube_url ? (
-                            <img
-                              src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/default.jpg`}
-                              alt={episode.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-4xl">🎙️</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Episode Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-full border border-white/30">
-                            Episódio #{index + 1}
-                          </span>
-                          {episode.is_premium && (
-                            <span className="px-3 py-1 bg-yellow-500/90 text-white text-xs font-bold rounded-full">
-                              ⭐ PREMIUM
-                            </span>
-                          )}
-                        </div>
-
-                        <h2 className="text-2xl font-bold text-white mb-3 line-clamp-1 group-hover:scale-105 transition">
-                          {episode.title}
-                        </h2>
-
-                        <div className="flex flex-wrap items-center gap-4 text-white/90">
-                          {/* Guests */}
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                            </svg>
-                            <span className="text-sm font-medium">
-                              {guests.length > 0 ? guests.map((g: any) => g.name).join(', ') : 'Sem convidados'}
-                            </span>
-                          </div>
-
-                          {/* Views */}
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-sm font-medium">
-                              {randomViews.toLocaleString('pt-BR')} visualizações
-                            </span>
-                          </div>
-
-                          {/* Sponsors */}
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-sm font-medium">
-                              {sponsors.length > 0 ? `${sponsors.length} patrocinador${sponsors.length > 1 ? 'es' : ''}` : 'Sem patrocinadores'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex-shrink-0 flex gap-3">
-                        <Link
-                          href={`/admin/episodes/${episode.id}/edit`}
-                          className="px-6 py-3 bg-white/90 hover:bg-white text-purple-600 rounded-lg font-bold transition backdrop-blur-sm shadow-lg"
-                        >
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => deleteEpisode(episode.id, episode.title)}
-                          className="px-6 py-3 bg-red-500/90 hover:bg-red-500 text-white rounded-lg font-bold transition backdrop-blur-sm shadow-lg"
-                        >
-                          Deletar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
+        <FilterSection title="Patrocinadores">
+          {allSponsors.map(sponsor => (
+            <FilterOption
+              key={sponsor.id}
+              label={sponsor.name}
+              checked={selectedSponsors.includes(sponsor.id)}
+              onChange={(checked) => {
+                if (checked) {
+                  setSelectedSponsors([...selectedSponsors, sponsor.id])
+                } else {
+                  setSelectedSponsors(selectedSponsors.filter(id => id !== sponsor.id))
+                }
+              }}
+            />
+          ))}
+        </FilterSection>
+      </FilterPanel>
     </div>
   )
 }
