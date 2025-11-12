@@ -2,6 +2,7 @@
 
 import { supabase } from '@/utils/supabase'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export default function EpisodesPage() {
   const [episodes, setEpisodes] = useState<any[]>([])
@@ -87,26 +88,30 @@ export default function EpisodesPage() {
                   className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden"
                 >
                   {episode.youtube_url && (
-                    <div className="aspect-video bg-gray-200">
-                      <img
-                        src={getYouTubeThumbnail(episode.youtube_url)}
-                        alt={episode.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget
-                          const videoId = extractYouTubeId(episode.youtube_url)
-                          if (target.src.includes('maxresdefault')) {
-                            target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                          }
-                        }}
-                      />
-                    </div>
+                    <Link href={`/episodes/${episode.id}`}>
+                      <div className="aspect-video bg-gray-200 cursor-pointer hover:opacity-90 transition">
+                        <img
+                          src={getYouTubeThumbnail(episode.youtube_url)}
+                          alt={episode.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget
+                            const videoId = extractYouTubeId(episode.youtube_url)
+                            if (target.src.includes('maxresdefault')) {
+                              target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                            }
+                          }}
+                        />
+                      </div>
+                    </Link>
                   )}
 
                   <div className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                      {episode.title}
-                    </h2>
+                    <Link href={`/episodes/${episode.id}`}>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600 transition cursor-pointer">
+                        {episode.title}
+                      </h2>
+                    </Link>
                     
                     {/* Guest badges */}
                     {guests.length > 0 && (
@@ -153,19 +158,25 @@ export default function EpisodesPage() {
                       </p>
                     )}
 
-                    <div className="flex gap-3 flex-wrap">
+                    <div className="flex gap-3 flex-wrap items-center">
+                      <Link
+                        href={`/episodes/${episode.id}`}
+                        className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                      >
+                        View Episode
+                      </Link>
                       {episode.youtube_url && (
                         <a
                           href={episode.youtube_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                          className="text-sm text-red-600 hover:text-red-800 transition font-medium"
                         >
-                          Watch on YouTube
+                          YouTube ↗
                         </a>
                       )}
                       {episode.is_premium && (
-                        <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg font-medium">
+                        <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg font-medium">
                           Premium
                         </span>
                       )}
