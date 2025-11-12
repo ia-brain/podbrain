@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminLayout({
@@ -36,67 +36,73 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-600 font-medium">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] relative overflow-hidden">
+        <div className="absolute inset-0 grid-overlay opacity-30"></div>
+        <div className="text-center relative z-10">
+          <div className="inline-block w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin glow-cyan"></div>
+          <p className="mt-6 text-cyan-400 font-orbitron font-bold text-xl">ACCESSING SYSTEM</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse glow-cyan"></div>
+            <div className="w-2 h-2 bg-magenta-400 rounded-full animate-pulse glow-magenta" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar with Flow Branding */}
-      <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-purple-900 text-white flex flex-col shadow-2xl">
+    <div className="flex min-h-screen bg-[#0a0a0f]">
+      {/* Futuristic Sidebar */}
+      <aside className="w-80 bg-[#13131a] border-r border-cyan-400/20 flex flex-col relative shadow-[0_0_30px_rgba(0,255,255,0.1)]">
+        {/* Scanline effect */}
+        <div className="absolute inset-0 scanline opacity-50 pointer-events-none"></div>
+
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="p-6 border-b border-cyan-400/20 relative">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-neon flex items-center justify-center shadow-lg glow-cyan relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-magenta-400/20"></div>
+              <svg className="w-8 h-8 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gradient-flow">Flow CMS</h1>
-              <p className="text-xs text-purple-300 font-medium">Estúdios Flow</p>
+              <h1 className="text-2xl font-orbitron font-bold text-gradient-neon">FLOW</h1>
+              <p className="text-xs text-cyan-400 font-orbitron tracking-wider">STUDIOS AI</p>
             </div>
           </div>
+          <div className="mt-4 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <NavLink href="/admin" icon="📊">
-            Dashboard
-          </NavLink>
-          <NavLink href="/admin/episodes" icon="🎙️">
-            Episódios
-          </NavLink>
-          <NavLink href="/admin/guests" icon="👥">
-            Convidados
-          </NavLink>
-          <NavLink href="/admin/sponsors" icon="💼">
-            Patrocinadores
-          </NavLink>
+        <nav className="flex-1 p-4 space-y-2 relative">
+          <NavLink href="/admin" icon="📊" label="COMMAND CENTER" />
+          <NavLink href="/admin/episodes" icon="🎙️" label="EPISÓDIOS" />
+          <NavLink href="/admin/guests" icon="👥" label="CONVIDADOS" />
+          <NavLink href="/admin/sponsors" icon="💼" label="PATROCINADORES" />
 
-          <div className="pt-4 mt-4 border-t border-white/10">
-            <NavLink href="/episodes" icon="🌐" secondary>
-              Ver Site Público
-            </NavLink>
+          <div className="pt-4 mt-4">
+            <div className="h-px bg-gradient-to-r from-transparent via-magenta-400/30 to-transparent mb-4"></div>
+            <NavLink href="/episodes" icon="🌐" label="SITE PÚBLICO" secondary />
           </div>
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-white/10 bg-black/20">
-          <div className="mb-3 p-3 bg-white/5 rounded-lg border border-white/10">
-            <p className="text-xs text-purple-300 font-medium mb-1">Conectado como</p>
-            <p className="text-sm font-medium truncate text-white">{user?.email}</p>
+        <div className="p-4 border-t border-cyan-400/20 bg-[#0a0a0f]/50 relative">
+          <div className="mb-4 p-4 holographic-card rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse glow-cyan"></div>
+              <p className="text-xs text-gray-400 font-orbitron tracking-wider">AUTHENTICATED</p>
+            </div>
+            <p className="text-sm font-medium text-white truncate">{user?.email}</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 rounded-lg transition-all text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3 px-4 neon-border rounded-lg transition-all text-sm font-orbitron font-bold hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 relative overflow-hidden group"
           >
-            Sair
+            <span className="relative z-10">DISCONNECT</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-magenta-500/0 group-hover:from-cyan-500/20 group-hover:to-magenta-500/20 transition-all"></div>
           </button>
         </div>
       </aside>
@@ -114,25 +120,57 @@ export default function AdminLayout({
 function NavLink({
   href,
   icon,
-  children,
+  label,
   secondary = false
 }: {
   href: string
   icon: string
-  children: React.ReactNode
+  label: string
   secondary?: boolean
 }) {
+  const pathname = usePathname()
+  const isActive = pathname === href
+
+  if (secondary) {
+    return (
+      <Link
+        href={href}
+        className="flex items-center gap-3 px-4 py-3 rounded-lg border border-magenta-400/30 hover:border-magenta-400/60 hover:bg-magenta-500/10 transition-all group"
+      >
+        <span className="text-xl group-hover:scale-110 transition-transform">{icon}</span>
+        <span className="text-sm font-orbitron font-medium text-gray-400 group-hover:text-magenta-400 transition-colors">
+          {label}
+        </span>
+      </Link>
+    )
+  }
+
   return (
     <Link
       href={href}
-      className={`flex items-center space-x-3 py-3 px-4 rounded-xl transition-all group ${
-        secondary
-          ? 'text-gray-400 hover:text-white hover:bg-white/5'
-          : 'hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20 hover:shadow-lg'
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all group relative overflow-hidden ${
+        isActive
+          ? 'neon-border bg-cyan-500/10'
+          : 'border border-transparent hover:border-cyan-400/30 hover:bg-cyan-500/5'
       }`}
     >
-      <span className="text-2xl group-hover:scale-110 transition-transform">{icon}</span>
-      <span className={`font-medium ${secondary ? 'text-sm' : ''}`}>{children}</span>
+      {isActive && (
+        <>
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-magenta-500 glow-cyan"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent"></div>
+        </>
+      )}
+      <span className={`text-xl group-hover:scale-110 transition-transform relative z-10 ${isActive ? 'float' : ''}`}>
+        {icon}
+      </span>
+      <span className={`text-sm font-orbitron font-medium transition-colors relative z-10 ${
+        isActive ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+      }`}>
+        {label}
+      </span>
+      {!isActive && (
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      )}
     </Link>
   )
 }
