@@ -11,35 +11,74 @@ export default function EditEpisodePage() {
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [guests, setGuests] = useState<any[]>([])
   const [formData, setFormData] = useState({
     title: '',
     youtube_url: '',
     description: '',
     is_premium: false,
+    selectedGuests: [] as string[],
   })
 
   useEffect(() => {
+    fetchGuests()
     fetchEpisode()
   }, [])
 
+  async function fetchGuests() {
+    const { data } = await supabase
+      .from('guests')
+      .select('id, name')
+      .order('name', { ascending: true })
+    
+    if (data) {
+      setGuests(data)
+    }
+  }
+
   async function fetchEpisode() {
-    const { data, error } = await supabase
+    // Fetch episode data
+    const { data: episode, error: episodeError } = await supabase
       .from('episodes')
       .select('*')
       .eq('id', episodeId)
       .single()
     
-    if (error) {
-      alert('Error loading episode: ' + error.message)
+    if (episodeError) {
+      alert('Error loading episode: ' + episodeError.message)
       router.push('/admin/episodes')
+      return
+    }
+
+    // Fetch linked guests
+    const { data: linkedGuests } = await supabase
+      .from('episode_guests')
+      .select('guest_id')
+      .eq('episode_id', episodeId)
+    
+    const guestIds = linkedGuests?.map(lg => lg.guest_id) || []
+
+    setFormData({
+      title: episode.title || '',
+      youtube_url: episode.youtube_url || '',
+      description: episode.description || '',
+      is_premium: episode.is_premium || false,
+      selectedGuests: guestIds,
+    })
+    setLoading(false)
+  }
+
+  const toggleGuest = (guestId: string) => {
+    if (formData.selectedGuests.includes(guestId)) {
+      setFormData({
+        ...formData,
+        selectedGuests: formData.selectedGuests.filter(id => id !== guestId)
+      })
     } else {
       setFormData({
-        title: data.title || '',
-        youtube_url: data.youtube_url || '',
-        description: data.description || '',
-        is_premium: data.is_premium || false,
+        ...formData,
+        selectedGuests: [...formData.selectedGuests, guestId]
       })
-      setLoading(false)
     }
   }
 
@@ -48,18 +87,63 @@ export default function EditEpisodePage() {
     setSaving(true)
 
     try {
-      const { error } = await supabase
+      // Update episode
+      const { error: episodeError } = await supabase
         .from('episodes')
-        .update(formData)
+        .update({
+          title: formData.title,
+          youtube_url: formData.youtube_url || null,
+          description: formData.description || null,
+          is_premium: formData.is_premium,
+        })
         .eq('id', episodeId)
 
-      if (error) throw error
+      if (episodeError) throw episodeError
+
+      // Delete existing guest links
+      await supabase
+        .from('episode_guests')
+        .delete()
+        .eq('episode_id', episodeId)
+
+      // Insert new guest links
+      if (formData.selectedGuests.length > 0) {
+        const guestLinks = formData.selectedGuests.map((guestId, index) => ({
+          episode_id: episodeId,
+          guest_id: guestId,
+          appearance_number: index + 1
+        }))
+
+        const { error: linkError } = await supabase
+          .from('episode_guests')
+          .insert(guestLinks)
+
+        if (linkError) throw linkError
+      }
 
       alert('Episode updated successfully! ✅')
       router.push('/admin/episodes')
     } catch (error: any) {
       alert('Error updating episode: ' + error.message)
       setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('Are you sure you want to delete this episode?')) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('episodes')
+      .delete()
+      .eq('id', episodeId)
+    
+    if (error) {
+      alert('Error deleting episode: ' + error.message)
+    } else {
+      alert('Episode deleted successfully!')
+      router.push('/admin/episodes')
     }
   }
 
@@ -140,6 +224,40 @@ export default function EditEpisodePage() {
           </p>
         </div>
 
+        {/* Guest Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Guests ({formData.selectedGuests.length} selected)
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+            {guests.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No guests available. <a href="/admin/guests/new" className="text-blue-600 hover:underline">Add a guest first</a>
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {guests.map((guest) => (
+                  <label
+                    key={guest.id}
+                    className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedGuests.includes(guest.id)}
+                      onChange={() => toggleGuest(guest.id)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{guest.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Select all guests that appear in this episode
+          </p>
+        </div>
+
         {/* Premium Toggle */}
         <div className="flex items-center">
           <input
@@ -172,11 +290,7 @@ export default function EditEpisodePage() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (confirm('Are you sure you want to delete this episode?')) {
-                handleDelete()
-              }
-            }}
+            onClick={handleDelete}
             className="ml-auto border border-red-300 text-red-600 px-6 py-2 rounded-lg hover:bg-red-50 transition font-medium"
           >
             Delete Episode
@@ -185,20 +299,6 @@ export default function EditEpisodePage() {
       </form>
     </div>
   )
-
-  async function handleDelete() {
-    const { error } = await supabase
-      .from('episodes')
-      .delete()
-      .eq('id', episodeId)
-    
-    if (error) {
-      alert('Error deleting episode: ' + error.message)
-    } else {
-      alert('Episode deleted successfully!')
-      router.push('/admin/episodes')
-    }
-  }
 }
 
 function extractYouTubeId(url: string): string {

@@ -1,33 +1,84 @@
 'use client'
 
 import { supabase } from '@/utils/supabase'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function NewEpisodePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [guests, setGuests] = useState<any[]>([])
   const [formData, setFormData] = useState({
     title: '',
     youtube_url: '',
     description: '',
     is_premium: false,
+    selectedGuests: [] as string[],
   })
+
+  useEffect(() => {
+    fetchGuests()
+  }, [])
+
+  async function fetchGuests() {
+    const { data } = await supabase
+      .from('guests')
+      .select('id, name')
+      .order('name', { ascending: true })
+    
+    if (data) {
+      setGuests(data)
+    }
+  }
+
+  const toggleGuest = (guestId: string) => {
+    if (formData.selectedGuests.includes(guestId)) {
+      setFormData({
+        ...formData,
+        selectedGuests: formData.selectedGuests.filter(id => id !== guestId)
+      })
+    } else {
+      setFormData({
+        ...formData,
+        selectedGuests: [...formData.selectedGuests, guestId]
+      })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
+      // Create episode
+      const { data: episode, error: episodeError } = await supabase
         .from('episodes')
         .insert([{
-          ...formData,
+          title: formData.title,
+          youtube_url: formData.youtube_url || null,
+          description: formData.description || null,
+          is_premium: formData.is_premium,
           published_at: new Date().toISOString(),
         }])
         .select()
+        .single()
 
-      if (error) throw error
+      if (episodeError) throw episodeError
+
+      // Link guests to episode
+      if (formData.selectedGuests.length > 0) {
+        const guestLinks = formData.selectedGuests.map((guestId, index) => ({
+          episode_id: episode.id,
+          guest_id: guestId,
+          appearance_number: index + 1
+        }))
+
+        const { error: linkError } = await supabase
+          .from('episode_guests')
+          .insert(guestLinks)
+
+        if (linkError) throw linkError
+      }
 
       alert('Episode created successfully! ✅')
       router.push('/admin/episodes')
@@ -89,6 +140,40 @@ export default function NewEpisodePage() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Episode description..."
           />
+        </div>
+
+        {/* Guest Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Guests ({formData.selectedGuests.length} selected)
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+            {guests.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No guests available. <a href="/admin/guests/new" className="text-blue-600 hover:underline">Add a guest first</a>
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {guests.map((guest) => (
+                  <label
+                    key={guest.id}
+                    className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedGuests.includes(guest.id)}
+                      onChange={() => toggleGuest(guest.id)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{guest.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Select all guests that appear in this episode
+          </p>
         </div>
 
         {/* Premium Toggle */}

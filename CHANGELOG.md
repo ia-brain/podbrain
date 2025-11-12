@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2025-11-12
+
+### ✨ Added
+
+- **Episode-Guest Relationship Management**
+  - Guest selection UI in new episode form
+  - Guest selection UI in edit episode form
+  - Display linked guests in episodes list table
+  - Multi-select checkbox interface for guest assignment
+  - Automatic appearance number tracking
+  - Guest count indicator in forms
+  - Visual guest badges with names in episode table
+  - Link to add guests if none exist
+
+### 🔧 Changed
+
+- **Episodes List Page**
+  - Added new "Guests" column in episodes table
+  - Display guest names as blue badges
+  - Show "No guests" placeholder when episode has no guests
+
+- **New Episode Form**
+  - Added scrollable guest selection area (max-height with overflow)
+  - Display selected guest count in real-time
+  - Form now creates episode_guests relationships on submit
+
+- **Edit Episode Form**
+  - Pre-loads existing guest relationships
+  - Updates guest links on save (delete old, insert new)
+  - Shows currently selected guests
+  - Improved code organization (moved delete handler)
+
+### 🐛 Fixed
+
+- Code organization in edit episode page (moved delete handler function)
+
+---
+
 ## [0.1.0] - 2025-11-12
 
 ### 🎉 Initial Release
@@ -500,7 +538,7 @@ CREATE TABLE episode_sponsors (
 ## Known Issues
 
 ### Current Limitations
-- No guest-episode linking in UI (database ready, UI pending)
+- ✅ ~~No guest-episode linking in UI~~ (COMPLETED in v0.2.0)
 - No sponsor-episode linking in UI (database ready, UI pending)
 - No file upload for logos (using URLs only)
 - No AI content generation yet
