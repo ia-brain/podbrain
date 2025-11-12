@@ -13,7 +13,7 @@ export default function AdminEpisodesPage() {
   }, [])
 
   async function fetchEpisodes() {
-    // Fetch episodes with their guests
+    // Fetch episodes with their guests and sponsors
     const { data: episodesData, error } = await supabase
       .from('episodes')
       .select(`
@@ -23,6 +23,13 @@ export default function AdminEpisodesPage() {
             id,
             name
           )
+        ),
+        episode_sponsors (
+          sponsors (
+            id,
+            name
+          ),
+          placement_type
         )
       `)
       .order('created_at', { ascending: false })
@@ -100,6 +107,9 @@ export default function AdminEpisodesPage() {
                   Guests
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sponsors
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Published
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -113,6 +123,7 @@ export default function AdminEpisodesPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {episodes.map((episode) => {
                 const guests = episode.episode_guests?.map((eg: any) => eg.guests).filter(Boolean) || []
+                const sponsors = episode.episode_sponsors?.map((es: any) => es.sponsors).filter(Boolean) || []
                 
                 return (
                   <tr key={episode.id} className="hover:bg-gray-50">
@@ -144,6 +155,22 @@ export default function AdminEpisodesPage() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">No guests</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {sponsors.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {sponsors.map((sponsor: any) => (
+                            <span
+                              key={sponsor.id}
+                              className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded"
+                            >
+                              💼 {sponsor.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">No sponsors</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

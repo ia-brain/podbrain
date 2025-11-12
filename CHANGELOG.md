@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2025-11-12
+
+### ✨ Added
+
+- **Episode-Sponsor Relationship Management**
+  - Sponsor selection UI in new episode form
+  - Sponsor selection UI in edit episode form
+  - Multi-sponsor support with placement type selection
+  - Display linked sponsors in episodes admin list table
+  - Selected sponsors list with remove functionality
+  - Sponsor add form with dropdown selectors
+  - Placement type options (Banner Top/Mid/End, Video Pause, Full Page)
+  - Visual sponsor badges with briefcase icon in admin table
+  - Sponsor count indicator in forms
+  - Automatic episode_sponsors table management
+
+- **Public Episodes Page Enhancements**
+  - Display guest badges with person icon
+  - Display sponsor badges with "Sponsored by" label
+  - Improved card layout with better spacing
+  - Enhanced thumbnail handling with fallback
+  - Better responsive design for mobile
+
+### 🔧 Changed
+
+- **Episodes List Page**
+  - Added new "Sponsors" column in episodes table
+  - Display sponsor names with green badges and briefcase icon
+  - Show "No sponsors" placeholder when episode has no sponsors
+  - Updated query to include episode_sponsors relationship
+
+- **New Episode Form**
+  - Added sponsor selection dropdown
+  - Added placement type dropdown (5 options)
+  - Display selected sponsors in green cards
+  - Each sponsor shows name and placement type
+  - Remove button for each selected sponsor
+  - Form now creates episode_sponsors relationships on submit
+
+- **Edit Episode Form**
+  - Pre-loads existing sponsor relationships with placement types
+  - Updates sponsor links on save (delete old, insert new)
+  - Shows currently selected sponsors with placement info
+  - Removed helper text from guest selection
+
+- **Public Episodes Page**
+  - Refactored to display guests and sponsors
+  - Improved card component structure
+  - Added `getYouTubeThumbnail()` helper function
+  - Enhanced layout with flex-wrap for responsive badges
+  - Better visual hierarchy with icons
+  - Improved date formatting
+  - Cleaner description truncation
+
+### 🐛 Fixed
+
+- YouTube thumbnail extraction moved to separate function
+- Added null check in `extractYouTubeId()` function
+- Fixed image error handling in public episodes page
+
+---
+
 ## [0.2.0] - 2025-11-12
 
 ### ✨ Added
@@ -539,7 +601,7 @@ CREATE TABLE episode_sponsors (
 
 ### Current Limitations
 - ✅ ~~No guest-episode linking in UI~~ (COMPLETED in v0.2.0)
-- No sponsor-episode linking in UI (database ready, UI pending)
+- ✅ ~~No sponsor-episode linking in UI~~ (COMPLETED in v0.3.0)
 - No file upload for logos (using URLs only)
 - No AI content generation yet
 - No payment integration

@@ -12,7 +12,22 @@ export default function EpisodesPage() {
     async function fetchEpisodes() {
       const { data, error } = await supabase
         .from('episodes')
-        .select('*')
+        .select(`
+          *,
+          episode_guests (
+            guests (
+              id,
+              name
+            )
+          ),
+          episode_sponsors (
+            sponsors (
+              id,
+              name
+            ),
+            placement_type
+          )
+        `)
         .order('created_at', { ascending: false })
       
       if (error) {
@@ -62,59 +77,103 @@ export default function EpisodesPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {episodes.map((episode) => (
-              <div
-                key={episode.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden"
-              >
-                {episode.youtube_url && (
-                  <div className="aspect-video bg-gray-200">
-                    <img
-                      src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/maxresdefault.jpg`}
-                      alt={episode.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/hqdefault.jpg`
-                      }}
-                    />
-                  </div>
-                )}
-
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {episode.title}
-                  </h2>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {episode.description}
-                  </p>
-
-                  {episode.published_at && (
-                    <p className="text-sm text-gray-500 mb-4">
-                      Published: {new Date(episode.published_at).toLocaleDateString()}
-                    </p>
+            {episodes.map((episode) => {
+              const guests = episode.episode_guests?.map((eg: any) => eg.guests).filter(Boolean) || []
+              const sponsors = episode.episode_sponsors?.map((es: any) => es.sponsors).filter(Boolean) || []
+              
+              return (
+                <div
+                  key={episode.id}
+                  className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+                >
+                  {episode.youtube_url && (
+                    <div className="aspect-video bg-gray-200">
+                      <img
+                        src={getYouTubeThumbnail(episode.youtube_url)}
+                        alt={episode.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget
+                          const videoId = extractYouTubeId(episode.youtube_url)
+                          if (target.src.includes('maxresdefault')) {
+                            target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                          }
+                        }}
+                      />
+                    </div>
                   )}
 
-                  <div className="flex gap-3">
-                    {episode.youtube_url && (
-                      <a
-                        href={episode.youtube_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                      >
-                        Watch on YouTube
-                      </a>
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                      {episode.title}
+                    </h2>
+                    
+                    {/* Guest badges */}
+                    {guests.length > 0 && (
+                      <div className="mb-3">
+                        <div className="flex flex-wrap gap-1">
+                          {guests.map((guest: any) => (
+                            <span
+                              key={guest.id}
+                              className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded"
+                            >
+                              👤 {guest.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                    {episode.is_premium && (
-                      <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg font-medium">
-                        Premium
-                      </span>
+
+                    {/* Sponsor badges */}
+                    {sponsors.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs text-gray-500 mb-1">Sponsored by:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {sponsors.map((sponsor: any) => (
+                            <span
+                              key={sponsor.id}
+                              className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded"
+                            >
+                              💼 {sponsor.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
+                    
+                    {episode.description && (
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {episode.description}
+                      </p>
+                    )}
+
+                    {episode.published_at && (
+                      <p className="text-sm text-gray-500 mb-4">
+                        {new Date(episode.published_at).toLocaleDateString()}
+                      </p>
+                    )}
+
+                    <div className="flex gap-3 flex-wrap">
+                      {episode.youtube_url && (
+                        <a
+                          href={episode.youtube_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                        >
+                          Watch on YouTube
+                        </a>
+                      )}
+                      {episode.is_premium && (
+                        <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg font-medium">
+                          Premium
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -123,7 +182,14 @@ export default function EpisodesPage() {
 }
 
 function extractYouTubeId(url: string): string {
+  if (!url) return ''
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
   const match = url.match(regExp)
   return match && match[2].length === 11 ? match[2] : ''
+}
+
+function getYouTubeThumbnail(url: string): string {
+  const videoId = extractYouTubeId(url)
+  if (!videoId) return ''
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
 }
